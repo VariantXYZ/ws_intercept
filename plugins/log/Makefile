@@ -12,4 +12,4 @@ SOURCES := $(foreach FILE,$(SOURCE),$(FILE).cpp)
 all:
 	$(CC) $(SOURCES) $(CFLAGS) $(LDFLAGS) -o ../../build/plugins/$(TARGET).dll
 clean:
-	rm -f ../../build/$(TARGET).dll
+	rm -f ../../build/plugins/$(TARGET).dll
