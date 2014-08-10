@@ -3,9 +3,6 @@
 #include <iphlpapi.h>
 
 #include "misc.h"
-#include "log.h"
-
-
 
 //***************************
 //http://stackoverflow.com/questions/13026220/c-function-hook-memory-address-only
