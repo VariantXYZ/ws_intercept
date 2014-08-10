@@ -36,8 +36,6 @@ extern "C" BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserv
 		{
 			char moduleName[MAX_PATH];
 			GetModuleBaseName(GetCurrentProcess(), NULL, moduleName, MAX_PATH);
-			if (strcmp(moduleName, "ffxiv.exe"))
-			   break;
 			Sleep(10000);
 			buf_new = (char*)malloc(MAX_PACKET*sizeof(unsigned char)); //Pre-allocate a buffer
 			CreateThread(NULL,0,setup_console,NULL,0,&threadIDConsole);
