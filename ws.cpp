@@ -28,26 +28,18 @@ LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comme
 	t.comment = (char*)malloc(sizeof(char)*strlen(comment));
 	strcpy(t.comment,comment);
 	if(type & WS_HANDLER_SEND)
-	{
 		ws_handlers_send.push_back(t);
-	}
 	else
-	{
 		ws_handlers_recv.push_back(t);
-	}
 	return (DWORD)(type & WS_HANDLER_SEND?ws_handlers_send.end():ws_handlers_recv.end()); //Returns pointer to node we just added
 }
 
 LIBAPI void unregister_handler(DWORD plugin_id, WS_HANDLER_TYPE type)
 {
 	if(type & WS_HANDLER_SEND)
-	{
 		ws_handlers_send.del((list_node<WS_handler>*)plugin_id);
-	}
 	else
-	{
 		ws_handlers_recv.del((list_node<WS_handler>*)plugin_id);
-	}	
 	return;
 }
 

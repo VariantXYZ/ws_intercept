@@ -35,9 +35,9 @@ public:
 		for(size_t i = 0; i < len-1; i++)
 		{
 			head = head->next;
-			delete[] head->prev;
+			delete head->prev;
 		}
-		delete[] head;
+		delete head;
 	}
 
 	void push_back(const T& value) 
@@ -61,7 +61,7 @@ public:
 			node->next->prev = node->prev;
 		if(node->prev != NULL)
 			node->prev->next = node->next;			
-		delete[] node;	
+		delete node;	
 		len--;
 		return;
 	}
