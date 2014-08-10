@@ -1,6 +1,4 @@
-#include <winsock2.h>
 #include <windows.h>
-#include <iphlpapi.h>
 
 #include "misc.h"
 
