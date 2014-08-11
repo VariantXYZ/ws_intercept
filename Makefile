@@ -1,6 +1,10 @@
 TARGET := ws
 SOURCE := ws misc plugins
 
+BUILD = build
+PLUGINS = plugins
+SHARED = shared
+
 CC  := i686-w64-mingw32-g++
 
 STD := c++98
@@ -9,7 +13,16 @@ LDFLAGS := -lws2_32 -liphlpapi -lpsapi -static -shared -Wl,--gc-sections -Wl,--o
 
 SOURCES := $(foreach FILE,$(SOURCE),$(FILE).cpp)
 
-all:
+all: $(PLUGINS) $(SHARED)
 	$(CC) $(SOURCES) $(CFLAGS) $(LDFLAGS) -o build/$(TARGET).dll
 clean:
-	rm -f build/$(TARGET).dll shared/lib$(TARGET).a
+	rm -rf $(BUILD) $(SHARED)
+
+$(PLUGINS): $(BUILD)
+	mkdir $(BUILD)/$(PLUGINS)
+
+$(BUILD):
+	mkdir $(BUILD)
+
+$(SHARED):
+	mkdir $(SHARED)
