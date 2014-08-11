@@ -75,6 +75,4 @@ public:
 	typedef list_node<T>* iterator;
 };
 
-
-
 #endif
