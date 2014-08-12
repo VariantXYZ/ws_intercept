@@ -11,7 +11,9 @@ LDFLAGS := -lws2_32 -static -shared -Wl,--gc-sections -s -L$(BASE)/shared/ $(LWS
 
 SOURCES := $(foreach FILE,$(SOURCE),$(FILE).cpp)
 
-all:
+all: $(BASE)/plugins/$(TARGET).dll
+
+$(BASE)/plugins/$(TARGET).dll:
 	$(CC) $(SOURCES) $(CFLAGS) $(LDFLAGS) -o $(BASE)/plugins/$(TARGET).dll
 clean:
 	rm -f $(BASE)/plugins/$(TARGET).dll
