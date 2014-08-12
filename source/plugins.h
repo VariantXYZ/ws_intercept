@@ -1,7 +1,7 @@
 #ifndef PLUGINS_H
 #define PLUGINS_H
-#include "list.h"
+#include "ws.h"
 
-void load_plugins(LPCTSTR, list<HMODULE>&);
+void load_plugins(LPCTSTR, struct WS_plugins*);
 
 #endif //PLUGINS_H

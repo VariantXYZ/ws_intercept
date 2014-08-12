@@ -10,26 +10,34 @@
 #define LIBAPI __declspec(dllimport)
 #endif
 
-typedef void (WINAPI *tWS_plugin)(SOCKET&, const char*, int&, int&); //For plugin hooks, returns plugin ID
+typedef void (WINAPI *tWS_plugin)(SOCKET*, const char*, int*, int*); //For plugin hooks, passes a pointer to all the relevant data EXCEPT buf because that's already a pointer; Pointers can be rather scary.
 
-enum WS_HANDLER_TYPE
+typedef enum
 {
 	WS_HANDLER_SEND = 0x1,
 	WS_HANDLER_RECV = 0x2
-};
+} WS_HANDLER_TYPE;
 
+//I swear the linux linked list implementation is demon magic
 struct WS_handler
 {
 	tWS_plugin func;
 	char *comment;
+	struct list_head ws_handlers_send; //Contains ordered list of function handlers for send
+	struct list_head ws_handlers_recv; //Contains ordered list of function handlers for recv
+
 };
 
-extern "C" LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comment = (char*)""); //0x0 affects all packets
-extern "C" LIBAPI void unregister_handler(DWORD plugin_id, WS_HANDLER_TYPE type);
+struct WS_plugins
+{
+    HMODULE plugin;
+    struct list_head plugins;
+};
 
-LIBAPI list<HMODULE> ws_plugins; //Why is the list of DLLs exposed? So someone can implement a plugin to reload them, of course!
-LIBAPI list<WS_handler> ws_handlers_send; //Contains ordered list of function handlers for send
-LIBAPI list<WS_handler> ws_handlers_recv; //Contains ordered list of function handlers for recv
+LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comment);
+LIBAPI void unregister_handler(DWORD plugin_id, WS_HANDLER_TYPE type);
 
+LIBAPI struct WS_plugins ws_plugins; //Why is the list of DLLs exposed? So someone can implement a plugin to reload them, of course!
+LIBAPI struct WS_handler ws_handlers;
 
 #endif //WS_SEND_H
