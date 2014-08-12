@@ -24,6 +24,7 @@ OBJ := $(foreach FILE,$(SOURCE),$(FILE).o)
 O_OBJS := $(foreach FILE,$(OBJ),$(BUILD)/$(FILE))
 
 all: $(BUILD) $(SHARED) $(TARGET_OUT) $(PLUGINS)
+	$(MAKE) -C $(SRC)/$(PLUGINS)/*/	
 
 ws: $(BUILD) $(SHARED) $(TARGET_OUT)
 
@@ -46,7 +47,6 @@ $(BUILD):
 
 $(PLUGINS):
 	mkdir $(PLUGINS)
-	$(MAKE) -C $(SRC)/$(PLUGINS)/*/
 
 $(SHARED):
 	mkdir $(SHARED)
