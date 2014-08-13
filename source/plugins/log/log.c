@@ -16,7 +16,7 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 	switch(reason)
 	{
 		case DLL_PROCESS_ATTACH:
-			CreateThread(NULL,0,setup_console,NULL,0,NULL);
+			CreateThread(NULL,0,setup_console,NULL,0,&threadIDConsole);
 			plugin_id_send = register_handler(log_ws, WS_HANDLER_SEND, "");
 			plugin_id_recv = register_handler(log_ws, WS_HANDLER_RECV, "");
 			break;
