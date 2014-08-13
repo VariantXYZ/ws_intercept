@@ -8,15 +8,15 @@ A simple hook into ws2_32.dll's send and receive functions that supports plugins
 
 Its major purpose is to be an easy to use go-to for packet logging and modification for any application that uses winsock that can be hooked into.
 
-###Why should I use it?
+####Why should I use it?
 
 If you've got an application (game, browser, or some personal application) whose packets you want to monitor but don't need all the provided functionality of a heavyweight tool like Microsoft's Network Monitor or Wireshark, or if you've got an application you want to modify the packets for (e.g, implementing your own encryption algorithm). 
 
-###How does it work?
+####How does it work?
 
 As soon as the DLL hooks in and modifies the call to ws2_send and ws2_receive, it runs a LoadLibrary on everything it can find in the ./plugins/ folder. 
 
-###But I could accomplish this with a simple proxy DLL, what makes yours so special?
+####But I could accomplish this with a simple proxy DLL, what makes yours so special?
 
 Mines isn't particularly special. Outside of supporting plugins, it's a rather simple implementation of a hook. 
 
@@ -24,7 +24,7 @@ The reason to prefer this over a proxy is in the case that in certain systems or
 
 Another alternative would be to write a simple proxy server and handle things that way, and it's a valid approach too, but you've gotta worry about things like what sockets to monitor and how to get that information in the first place.
 
-###Alright, I guess this could serve my purposes well, how do I set it up?
+####Alright, I guess this could serve my purposes well, how do I set it up?
 
 Well first you need to clone it, after that...
 
@@ -42,7 +42,7 @@ plugins/log.dll - A plugin that logs both sent and received packets in a console
 
 Note that the rest of the files in build are just the unlinked object files, you can ignore them.
 
-###How do I load the DLL?
+####How do I load the DLL?
 
 A number of ways. You could use [Lord PE](http://www.woodmann.com/collaborative/tools/index.php/LordPE) to modify your client's PE header and add the DLL as an import.
 
@@ -52,13 +52,13 @@ HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Windows for 64-b
 
 HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs for 32-bit applications on 64-bit windows
 
-###How do I write my own plugins?
+####How do I write my own plugins?
 
 Here's the fun part! Go ahead and look in source/plugins/log/ for an example implementation. The Makefile at the top level of the project builds all plugins too, so you can go ahead and take advantage of that if you want.
 
 You'll need to link against ws.a and include ws.h (probably also include winsock2.h and windows.h) in your project (C or C++ should work fine). Here are the relevant functions you'll need to use:
 
-####LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comment)
+######LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comment)
 
 A function that'll register your function to be called when a packet is sent or received (based on WS_HANDLER_TYPE).
 
@@ -70,13 +70,14 @@ char* comment - Currently unnecessary, you could just pass a "", but this at lea
 
 RETURNS: A plugin identifier, save this somewhere because you'll need it to unload your handler.
 
-####LIBAPI void unregister_handler(DWORD plugin_id, WS_HANDLER_TYPE type);
+######LIBAPI void unregister_handler(DWORD plugin_id, WS_HANDLER_TYPE type);
 
 If for whatever reason your DLL is being unloaded, this'll remove your function handler. Just pass the plugin_id from register_handler and the handler type (send or receive)
 
 Also available to you are:
 
 LIBVAR struct WS_plugins ws_plugins
+
 LIBVAR struct WS_handler ws_handlers
 
 Which are lists of the plugins and handlers loaded. Check out ws.h and list.h for how to use these. 
