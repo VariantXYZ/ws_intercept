@@ -23,14 +23,16 @@ O_SOURCE := $(foreach FILE,$(SOURCES),$(SRC)/$(FILE))
 OBJ := $(foreach FILE,$(SOURCE),$(FILE).o)
 O_OBJS := $(foreach FILE,$(OBJ),$(BUILD)/$(FILE))
 
-all: $(BUILD) $(SHARED) $(TARGET_OUT) $(PLUGINS)
-	$(MAKE) -C $(SRC)/$(PLUGINS)/*/	
+#Confusing, I know, this is to build every plugin subdirectory
+PLUGINSRC := $(wildcard $(SRC)/$(PLUGINS)/*/.)
+
+.PHONY: $(PLUGINSRC) #Gotta run this regardless of timestamp on the folder, let the plugin Makefile handle things 
+all: $(BUILD) $(SHARED) $(TARGET_OUT) $(PLUGINS) $(PLUGINSRC)
 
 ws: $(BUILD) $(SHARED) $(TARGET_OUT)
 
 clean:
 	rm -rf $(BUILD) $(SHARED) $(TARGET_OUT)
-	make clean -C $(SRC)/$(PLUGINS)/*/
 	rm -rf $(PLUGINS)
 
 $(TARGET_OUT): $(O_OBJS)
@@ -40,6 +42,10 @@ $(BUILD)/%.o: $(SRC)/%.c
 	$(CC) -c $(CFLAGS) $(SRC)/$*.c -o $@
 
 $(SRC)/%.c: $(SRC)/%.h
+
+#Plugins
+$(PLUGINSRC):
+	$(MAKE) -C $@
 
 #Make directories if necessary
 $(BUILD):
