@@ -84,14 +84,15 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 static DWORD WINAPI initialize(LPVOID param)
 {
 	DWORD addr;
+	BYTE replaced[10];
 	
-	//TODO: Clean this area up and move these to a function
+	//TODO: Clean this area up and move these to some inline function
 	addr = (DWORD)GetProcAddress(GetModuleHandle(TEXT("WS2_32.dll")), "send");
-	if(apply_patch(0xE9,addr,(void*)(&repl_send),&orig_size_send, replaced_send))
+	if(apply_patch(0xE9,addr,(void*)(&repl_send),&orig_size_send, replaced_send)) //Note we only store this replaced because this is the original winsock function code, which we need to put back upon closing
 	{
 		pSend = (tWS)VirtualAlloc(NULL, orig_size_send << 2, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 		memcpy((void*)pSend,replaced_send,orig_size_send);
-		apply_patch(0xE9,(DWORD)pSend+orig_size_send,(void*)(addr+orig_size_send),&orig_size_send, replaced_send);
+		apply_patch(0xE9,(DWORD)pSend+orig_size_send,(void*)(addr+orig_size_send),&orig_size_send, replaced);
 		VirtualProtect((LPVOID)pSend,orig_size_send+5,PAGE_EXECUTE_READWRITE,NULL); //DEP sucks :(
 	}
 
@@ -100,7 +101,7 @@ static DWORD WINAPI initialize(LPVOID param)
 	{
 		pRecv = (tWS)VirtualAlloc(NULL, orig_size_recv << 2, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 		memcpy((void*)pRecv,replaced_recv,orig_size_recv); 
-		apply_patch(0xE9,(DWORD)pRecv+orig_size_recv,(void*)(addr+orig_size_recv),&orig_size_recv, replaced_recv); 
+		apply_patch(0xE9,(DWORD)pRecv+orig_size_recv,(void*)(addr+orig_size_recv),&orig_size_recv, replaced); 
 		VirtualProtect((LPVOID)pRecv,orig_size_recv+5,PAGE_EXECUTE_READWRITE,NULL);
 	}
 
