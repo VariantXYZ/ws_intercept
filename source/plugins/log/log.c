@@ -8,8 +8,8 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags);
 
 static DWORD threadIDConsole = 0;
 
-static DWORD plugin_id_send;
-static DWORD plugin_id_recv;
+static DWORD plugin_id_send = NULL;
+static DWORD plugin_id_recv = NULL;
 
 BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
@@ -69,6 +69,3 @@ static DWORD WINAPI setup_console(LPVOID param)
 	}
 	return 0;
 }
-
-
-
