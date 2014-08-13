@@ -26,3 +26,11 @@ BOOL apply_patch(BYTE eType, DWORD dwAddress, const void *pTarget, DWORD *orig_s
 	
     return bSuccess;
 }
+
+inline void exec_copy(DWORD addr, BYTE *replaced, DWORD orig_size)
+{
+		DWORD old_val, temp;
+		VirtualProtect((LPVOID)addr,sizeof(DWORD),PAGE_EXECUTE_READWRITE,&old_val);
+		memcpy((void*)addr,replaced,orig_size);
+		VirtualProtect((LPVOID)addr,sizeof(DWORD),old_val,&temp);
+}

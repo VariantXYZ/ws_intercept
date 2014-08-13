@@ -1,6 +1,7 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <psapi.h>
+#include <stdio.h>
 
 #include "ws.h"
 #include "misc.h"
@@ -8,7 +9,7 @@
 #include "list.h"
 
 #define MAX_PACKET 4096
-//#define APPLICATION_NAME "ffxiv.exe"
+#define APPLICATION_NAME "ffxiv.exe"
 
 
 typedef int (WINAPI *tWS)(SOCKET, const char*, int, int); //For base functions
@@ -28,6 +29,8 @@ static BYTE replaced_send[10];
 static BYTE replaced_recv[10];
 static DWORD orig_size_send = 0;
 static DWORD orig_size_recv = 0;
+static DWORD addr_send = 0; 
+static DWORD addr_recv = 0;
 
 LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comment)
 {
@@ -46,10 +49,12 @@ LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comme
 
 LIBAPI void unregister_handler(DWORD plugin_id, WS_HANDLER_TYPE type)
 {
+	if((struct WS_handler*)plugin_id == NULL)
+		return;
 	if(type & WS_HANDLER_SEND)
 		list_del( &((struct WS_handler*)plugin_id)->ws_handlers_send);
 	else
-		list_del( &((struct WS_handler*)plugin_id)->ws_handlers_send);
+		list_del( &((struct WS_handler*)plugin_id)->ws_handlers_recv);
 	return;
 }
 
@@ -85,27 +90,30 @@ static DWORD WINAPI initialize(LPVOID param)
 {
 	DWORD addr;
 	BYTE replaced[10];
+	DWORD orig_size;
+
+
+	addr_send = (DWORD)GetProcAddress(GetModuleHandle(TEXT("WS2_32.dll")), "send");
+	addr_recv = (DWORD)GetProcAddress(GetModuleHandle(TEXT("WS2_32.dll")), "recv");
 	
 	//TODO: Clean this area up and move these to some inline function
-	addr = (DWORD)GetProcAddress(GetModuleHandle(TEXT("WS2_32.dll")), "send");
+	addr = addr_send;
 	if(apply_patch(0xE9,addr,(void*)(&repl_send),&orig_size_send, replaced_send)) //Note we only store this replaced because this is the original winsock function code, which we need to put back upon closing
 	{
 		pSend = (tWS)VirtualAlloc(NULL, orig_size_send << 2, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 		memcpy((void*)pSend,replaced_send,orig_size_send);
-		apply_patch(0xE9,(DWORD)pSend+orig_size_send,(void*)(addr+orig_size_send),&orig_size_send, replaced);
-		VirtualProtect((LPVOID)pSend,orig_size_send+5,PAGE_EXECUTE_READWRITE,NULL); //DEP sucks :(
+		apply_patch(0xE9,(DWORD)pSend+orig_size_send,(void*)(addr+orig_size_send),&orig_size, replaced);
 	}
 
-	addr = (DWORD)GetProcAddress(GetModuleHandle(TEXT("WS2_32.dll")), "recv");
+	addr = addr_recv;
 	if(apply_patch(0xE9,addr,(void*)(&repl_recv),&orig_size_recv, replaced_recv))
 	{
 		pRecv = (tWS)VirtualAlloc(NULL, orig_size_recv << 2, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 		memcpy((void*)pRecv,replaced_recv,orig_size_recv); 
-		apply_patch(0xE9,(DWORD)pRecv+orig_size_recv,(void*)(addr+orig_size_recv),&orig_size_recv, replaced); 
-		VirtualProtect((LPVOID)pRecv,orig_size_recv+5,PAGE_EXECUTE_READWRITE,NULL);
+		apply_patch(0xE9,(DWORD)pRecv+orig_size_recv,(void*)(addr+orig_size_recv),&orig_size, replaced); 
 	}
 
-    //Initialize lists
+	//Initialize lists
 	INIT_LIST_HEAD(&ws_handlers.ws_handlers_send);
 	INIT_LIST_HEAD(&ws_handlers.ws_handlers_recv);
 	INIT_LIST_HEAD(&ws_plugins.plugins);
@@ -113,15 +121,14 @@ static DWORD WINAPI initialize(LPVOID param)
 	return 0;
 }
 
-static void revert() //TODO: Figure out why things seem to crash on closing on FFXIV
+static void revert()
 {
-	DWORD addr;	
 	if(!orig_size_send && !orig_size_recv)
 		return;
-	addr = (DWORD)GetProcAddress(GetModuleHandle(TEXT("WS2_32.dll")), "send");
-	memcpy((void*)addr,replaced_send,orig_size_send);
-	addr = (DWORD)GetProcAddress(GetModuleHandle(TEXT("WS2_32.dll")), "recv");
-	memcpy((void*)addr,replaced_recv,orig_size_recv);
+	if(addr_send)
+		exec_copy(addr_send, replaced_send, orig_size_send);
+	if(addr_recv)
+		exec_copy(addr_recv, replaced_recv, orig_size_recv);
 	return;
 }
 
