@@ -29,6 +29,8 @@ PLUGINSRC := $(wildcard $(SRC)/$(PLUGINS)/*/.)
 .PHONY: $(PLUGINSRC) #Gotta run this regardless of timestamp on the folder, let the plugin Makefile handle things 
 all: $(BUILD) $(SHARED) $(TARGET_OUT) $(PLUGINS) $(PLUGINSRC)
 
+plugin: $(PLUGINS) $(PLUGINSRC)
+
 ws: $(BUILD) $(SHARED) $(TARGET_OUT)
 
 clean:
