@@ -34,7 +34,27 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 	return TRUE;
 }
 
+
+#if LOGGING == 1
 void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags) //Note that you're given pointers to everything! (buf was already a pointer though)
+{
+	struct sockaddr_in info;
+	int infolen;
+	getpeername(*s,(struct sockaddr*)(&info),&infolen);
+	const short port = ntohs(info.sin_port);
+
+	//<SOCKET:4><ADDR:4><PORT:2><LEN:4><FLAGS:4><DATA:LEN>
+	LOG(s,sizeof(SOCKET),1);
+	LOG(&info.sin_addr,sizeof(struct in_addr),1);
+	LOG(&port,sizeof(short),1);
+	LOG(len,sizeof(int),1);
+	LOG(flags,sizeof(int),1);
+	LOG(buf,sizeof(char),*len); //If for whatever reason len != buffer size, then there's some bigger underlying problem... or another plugin is messing with something
+
+	return;
+}
+#else
+void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 {
 	struct sockaddr_in info;
 	int infolen;
@@ -48,12 +68,20 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags) //Note that
 	LOGn("\n");
 	return;
 }
+#endif
+
 
 static DWORD WINAPI setup_console(LPVOID param)
 {
 	AllocConsole();
 	freopen("CONOUT$","w",stdout);
 	freopen("CONIN$","r",stdin);
+#if LOGGING == 1
+	char *name = malloc(sizeof(char)*30);
+	sprintf(name,"log_%u.bin",(unsigned int)time(NULL));
+	logfile = fopen(name,"wb");
+	free(name);
+#endif
 	while(1)
 	{
 		MSG msg;
@@ -67,5 +95,8 @@ static DWORD WINAPI setup_console(LPVOID param)
 			}
 		}
 	}
+#if LOGGING == 1
+	fclose(logfile);
+#endif
 	return 0;
 }
