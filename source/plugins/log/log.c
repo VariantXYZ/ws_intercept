@@ -73,15 +73,17 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 
 static DWORD WINAPI setup_console(LPVOID param)
 {
-	AllocConsole();
-	freopen("CONOUT$","w",stdout);
-	freopen("CONIN$","r",stdin);
 #if LOGGING == 1
 	char *name = malloc(sizeof(char)*30);
 	sprintf(name,"log_%u.bin",(unsigned int)time(NULL));
 	logfile = fopen(name,"wb");
 	free(name);
+#else
+	AllocConsole();
+	freopen("CONOUT$","w",stdout);
+	freopen("CONIN$","r",stdin);
 #endif
+
 	while(1)
 	{
 		MSG msg;
