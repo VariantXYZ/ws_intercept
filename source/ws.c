@@ -47,7 +47,7 @@ LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comme
 
 LIBAPI void unregister_handler(DWORD plugin_id, WS_HANDLER_TYPE type)
 {
-	if((struct WS_handler*)plugin_id == NULL)
+	if(!plugin_id)
 		return;
 	if(type & WS_HANDLER_SEND)
 		list_del( &((struct WS_handler*)plugin_id)->ws_handlers_send);
