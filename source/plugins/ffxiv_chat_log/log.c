@@ -44,6 +44,21 @@ struct Pkt_FFXIV_Chat
 	char name[32]; //53+ is 32 byte name and message
 	char message[1024]; 
 };
+
+struct Pkt_FFXIV_Chat_c
+{
+	uint32_t packet_id; //0..3
+	uint64_t unk1; //something player/chat related 4..11
+	uint32_t unk2; //something player/chat related 12..15
+	uint64_t unk3; //Something specific to chat type 16..23
+	uint64_t unk4; //Something specific to chat type 24..31
+	uint32_t unk5; //Something session specific 32..35
+	uint32_t unk6; //36..39
+	uint64_t id1; //Something character specific 40..47
+	uint32_t id2; //Something character specific 48..51
+	char name[32]; //53+ is 32 byte name and message
+	char message[1024]; 
+};
 #pragma pack()
 
 struct Pkt_FFXIV packet;
@@ -87,8 +102,11 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags) //Note that
 	
 	if(*((unsigned int*)packet.data) == 0x00000458)
 	{
-		struct Pkt_FFXIV_Chat chat = *((struct Pkt_FFXIV_Chat*)packet.data);
-		LOG("[%s]|[ID1: %llu, ID2:%u]: %s", chat.name, chat.id1, chat.id2, chat.message);
+		if(!packet.flag2)
+			LOG("[%s]|[ID1: %llu, ID2:%u]: %s", ((struct Pkt_FFXIV_Chat*)packet.data)->name, ((struct Pkt_FFXIV_Chat*)packet.data)->id1, ((struct Pkt_FFXIV_Chat*)packet.data)->id2, ((struct Pkt_FFXIV_Chat*)packet.data)->message);
+		else
+			LOG("[%s]|[ID1: %llu, ID2:%u]: %s", ((struct Pkt_FFXIV_Chat_c*)packet.data)->name, ((struct Pkt_FFXIV_Chat_c*)packet.data)->id1, ((struct Pkt_FFXIV_Chat_c*)packet.data)->id2, ((struct Pkt_FFXIV_Chat_c*)packet.data)->message);
+
 	}	
 	free(packet.data);
 	return;
