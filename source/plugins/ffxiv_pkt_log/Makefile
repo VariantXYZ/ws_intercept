@@ -1,4 +1,4 @@
-TARGET := ffxiv_chat_log
+TARGET := ffxiv_pkt_log
 SOURCE := log
 LWS := -lws
 BASE := ../../..
