@@ -16,13 +16,22 @@ static DWORD plugin_id_recv = 0;
 #define CHUNK 262144
 
 #pragma pack(1)
-struct Pkt_FFXIV_chat //0x65001400, 0x67001400
+struct Pkt_FFXIV_chat //0x00650014
 {
         uint8_t unk2[20]; //20..39
         uint32_t id1; //40..43, user ID, constant between sessions/areas
         uint32_t unk3; //44..47, some constant
         uint32_t id2; //48..51, constant between sessions/areas
         uint8_t unk1; //65 needs this, but 67 doesn't... what
+        unsigned char name[32];
+        unsigned char message[1024];
+};
+struct Pkt_FFXIV_chat_2 //0x00670014
+{
+        uint8_t unk2[20]; //20..39
+        uint32_t id1; //40..43, user ID, constant between sessions/areas
+        uint32_t unk3; //44..47, some constant
+        uint32_t id2; //48..51, constant between sessions/areas
         unsigned char name[32];
         unsigned char message[1024];
 };
@@ -43,7 +52,7 @@ struct Pkt_FFXIV
         uint8_t flag1; //Unknown, byte 32
         uint8_t flag2; //Compression, byte 33
         uint8_t unk3[6]; //unknown, 34-39
-        unsigned char *data; //40+, could be compressed
+	unsigned char *data;
 };
 #pragma pack()
 
@@ -52,6 +61,7 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 	switch(reason)
 	{
 		case DLL_PROCESS_ATTACH:
+			plugin_id_recv = register_handler(log_ws, WS_HANDLER_RECV, "A logging function for ws2_recv");
 			CreateThread(NULL,0,setup_console,NULL,0,&threadIDConsole);
 			break;
 		case DLL_PROCESS_DETACH:
@@ -71,7 +81,14 @@ inline void handle_chat(unsigned char *buf)
 {
 
 	struct Pkt_FFXIV_chat chat = *(struct Pkt_FFXIV_chat*)(buf);
-    printf("[%s][%d %d]: %s", chat.name, chat.id1, chat.id2, chat.message);
+    	LOG("[%s][%d %d]: %s", chat.name, chat.id1, chat.id2, chat.message);
+}
+
+inline void handle_chat_2(unsigned char *buf)
+{
+
+	struct Pkt_FFXIV_chat_2 chat = *(struct Pkt_FFXIV_chat_2*)(buf);
+    	LOG("[%s][%d %d]: %s", chat.name, chat.id1, chat.id2, chat.message);
 }
 
 void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
@@ -89,15 +106,29 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 	if(packet.size < 19)
 		return;
 
-	size_t to_read = sizeof(struct Pkt_FFXIV_msg);
-	struct Pkt_FFXIV_msg *msg = malloc(to_read);
+	size_t to_read = *len - (sizeof(struct Pkt_FFXIV) - sizeof(unsigned char*));
+	packet.data = malloc(to_read);
 	
-	memcpy(msg, (void*)pos, to_read);
+	memcpy(packet.data, (void*)pos, to_read);
 	pos += to_read;
-	
+		
+	//Decompress stream	
+	if(packet.flag2)
+	{
+		unsigned char *t_data = malloc(CHUNK);
+		UncompressData(packet.data,to_read,t_data,CHUNK);
+		free(packet.data);
+		packet.data = t_data;
+	}
+
+	struct Pkt_FFXIV_msg *msg = malloc(sizeof(struct Pkt_FFXIV_msg));
+	memcpy(msg, packet.data, sizeof(struct Pkt_FFXIV_msg));
+	pos = (uint32_t)(packet.data + sizeof(struct Pkt_FFXIV_msg));
+
 	switch(msg->msg_type)
 	{
 		case 0x00650014: handle_chat((unsigned char*)pos); break;
+		case 0x00670014: handle_chat_2((unsigned char*)pos); break;
 		default: break;
 	}
 	free(msg);
