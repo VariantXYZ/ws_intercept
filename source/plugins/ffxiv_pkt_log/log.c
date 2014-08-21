@@ -81,14 +81,14 @@ inline void handle_chat(unsigned char *buf)
 {
 
 	struct Pkt_FFXIV_chat chat = *(struct Pkt_FFXIV_chat*)(buf);
-    	LOG("[%s][%d %d]: %s", chat.name, chat.id1, chat.id2, chat.message);
+    LOG("[%s][%d %d]: %s", chat.name, chat.id1, chat.id2, chat.message);
 }
 
 inline void handle_chat_2(unsigned char *buf)
 {
 
 	struct Pkt_FFXIV_chat_2 chat = *(struct Pkt_FFXIV_chat_2*)(buf);
-    	LOG("[%s][%d %d]: %s", chat.name, chat.id1, chat.id2, chat.message);
+    LOG("[%s][%d %d]: %s", chat.name, chat.id1, chat.id2, chat.message);
 }
 
 void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
@@ -111,7 +111,7 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 	
 	memcpy(packet.data, (void*)pos, to_read);
 	pos += to_read;
-		
+	
 	//Decompress stream	
 	if(packet.flag2)
 	{
@@ -120,7 +120,6 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 		free(packet.data);
 		packet.data = t_data;
 	}
-
 	struct Pkt_FFXIV_msg *msg = malloc(sizeof(struct Pkt_FFXIV_msg));
 	memcpy(msg, packet.data, sizeof(struct Pkt_FFXIV_msg));
 	if(!msg->msg_size)
@@ -134,6 +133,8 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 		case 0x00670014: handle_chat_2((unsigned char*)pos); break;
 		default: break;
 	}
+	
+	free(packet.data);
 	free(msg);
 	return;
 }
