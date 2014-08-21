@@ -30,6 +30,8 @@ static DWORD orig_size_recv = 0;
 static DWORD addr_send = 0; 
 static DWORD addr_recv = 0;
 
+#define APPLICATION_NAME "ffxiv.exe"
+
 LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comment)
 {
 	if(comment == NULL)
