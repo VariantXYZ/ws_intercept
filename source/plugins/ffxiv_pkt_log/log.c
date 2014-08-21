@@ -123,6 +123,9 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 
 	struct Pkt_FFXIV_msg *msg = malloc(sizeof(struct Pkt_FFXIV_msg));
 	memcpy(msg, packet.data, sizeof(struct Pkt_FFXIV_msg));
+	if(!msg->msg_size)
+		return;
+
 	pos = (uint32_t)(packet.data + sizeof(struct Pkt_FFXIV_msg));
 
 	switch(msg->msg_type)
