@@ -77,18 +77,22 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 	return TRUE;
 }
 
-inline void handle_chat(unsigned char *buf)
+inline void handle_chat(unsigned char *buf, size_t size)
 {
 
-	struct Pkt_FFXIV_chat chat = *(struct Pkt_FFXIV_chat*)(buf);
-    LOG("[%s][%d %d]: %s", chat.name, chat.id1, chat.id2, chat.message);
+	struct Pkt_FFXIV_chat *chat = malloc(sizeof(struct Pkt_FFXIV_chat));
+	memcpy(chat, buf, size);
+	LOG("[%s][%d %d]: %s", chat->name, chat->id1, chat->id2, chat->message);
+	free(chat);
 }
 
-inline void handle_chat_2(unsigned char *buf)
+inline void handle_chat_2(unsigned char *buf, size_t size)
 {
 
-	struct Pkt_FFXIV_chat_2 chat = *(struct Pkt_FFXIV_chat_2*)(buf);
-    LOG("[%s][%d %d]: %s", chat.name, chat.id1, chat.id2, chat.message);
+	struct Pkt_FFXIV_chat_2 *chat = malloc(sizeof(struct Pkt_FFXIV_chat_2));
+	memcpy(chat, buf, size);
+	LOG("[%s][%d %d]: %s", chat->name, chat->id1, chat->id2, chat->message);
+	free(chat);
 }
 
 void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
@@ -105,7 +109,7 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 
 	if(packet.size < 19)
 		return;
-
+	//At this point, we know exactly how many messages there are
 	size_t to_read = *len - (sizeof(struct Pkt_FFXIV) - sizeof(unsigned char*));
 	packet.data = malloc(to_read);
 	
@@ -120,22 +124,27 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 		free(packet.data);
 		packet.data = t_data;
 	}
-	struct Pkt_FFXIV_msg *msg = malloc(sizeof(struct Pkt_FFXIV_msg));
-	memcpy(msg, packet.data, sizeof(struct Pkt_FFXIV_msg));
-	if(!msg->msg_size)
-		return;
 
-	pos = (uint32_t)(packet.data + sizeof(struct Pkt_FFXIV_msg));
-
-	switch(msg->msg_type)
+	pos = (uint32_t)(packet.data);
+	while(packet.message_count--)
 	{
-		case 0x00650014: handle_chat((unsigned char*)pos); break;
-		case 0x00670014: handle_chat_2((unsigned char*)pos); break;
-		default: break;
+		struct Pkt_FFXIV_msg *msg = malloc(sizeof(struct Pkt_FFXIV_msg));
+
+		memcpy(msg, packet.data, sizeof(struct Pkt_FFXIV_msg));
+		pos += sizeof(struct Pkt_FFXIV_msg); //Data for the packet would start here
+
+		switch(msg->msg_type)
+		{
+			case 0x00650014: handle_chat((unsigned char*)pos, msg->msg_size); break;
+			case 0x00670014: handle_chat_2((unsigned char*)pos, msg->msg_size); break;
+			default: break;
+		}
+
+		pos += msg->msg_size;
+		free(msg);
 	}
 	
 	free(packet.data);
-	free(msg);
 	return;
 }
 
