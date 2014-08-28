@@ -18,7 +18,7 @@ struct buffer_list
 	uint8_t flag;
 	uint8_t compressed;	
 	uint8_t *data;	
-    struct list_head buf;
+	struct list_head buf;
 };
 
 #pragma pack(1)
@@ -29,8 +29,8 @@ struct Pkt_FFXIV_chat //0x00650014
         uint32_t unk3; //44..47, some constant
         uint32_t id2; //48..51, constant between sessions/areas
         uint8_t unk1; //65 needs this, but 67 doesn't... what
-        unsigned char name[32];
-        unsigned char message[1024];
+        char name[32];
+        char message[1024];
 };
 struct Pkt_FFXIV_chat_2 //0x00670014
 {
@@ -38,8 +38,8 @@ struct Pkt_FFXIV_chat_2 //0x00670014
         uint32_t id1; //40..43, user ID, constant between sessions/areas
         uint32_t unk3; //44..47, some constant
         uint32_t id2; //48..51, constant between sessions/areas
-        unsigned char name[32];
-        unsigned char message[1024];
+        char name[32];
+        char message[1024];
 };
 struct Pkt_FFXIV_msg
 {

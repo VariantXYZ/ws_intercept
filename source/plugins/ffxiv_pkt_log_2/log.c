@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <zlib.h>
+#include <string.h>
 #include "log.h"
 
 static DWORD WINAPI setup(LPVOID param);
@@ -46,6 +47,8 @@ inline void handle_chat(uint8_t *buf, size_t size)
 
         struct Pkt_FFXIV_chat *chat = malloc(sizeof(struct Pkt_FFXIV_chat));
         memcpy(chat, buf, size);
+	if(!strlen(chat->name) || !strlen(chat->message))
+		return;
         LOG("[%s]: %s", chat->name, chat->message);
         free(chat);
 }
@@ -55,6 +58,8 @@ inline void handle_chat_2(uint8_t *buf, size_t size)
 
         struct Pkt_FFXIV_chat_2 *chat = malloc(sizeof(struct Pkt_FFXIV_chat_2));
         memcpy(chat, buf, size);
+	if(!strlen(chat->name) || !strlen(chat->message))
+		return;
         LOG("[%s][%d %d]: %s", chat->name, chat->id1, chat->id2, chat->message);
         free(chat);
 }
@@ -95,7 +100,6 @@ static DWORD WINAPI handle_buf(LPVOID PARAM) //Serialize packet parsing, TODO: s
 				struct Pkt_FFXIV_msg msg = *(struct Pkt_FFXIV_msg*)(pos);
 				pos += sizeof(struct Pkt_FFXIV_msg);
 				
-				
 				if(msg.msg_size > tmp->size)
 					break;
 				
@@ -123,7 +127,7 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 
 	if(p.size > *len)
 	{
-		LOG("p.size > len (%u > %u)", p.size, *len); //I'm sure I'll have to handle this case properly eventually
+//		LOG("p.size > len (%08X > %08X)", p.size, *len); //I'm sure I'll have to handle this case properly eventually
 		return;
 	}
 
