@@ -7,7 +7,7 @@
 #include "misc.h"
 #include "plugins.h"
 #include "list.h"
-#define APPLICATION_NAME "ffxiv.exe"
+
 #define MAX_PACKET 4096
 
 typedef int (WINAPI *tWS)(SOCKET, const char*, int, int); //For base functions
