@@ -127,7 +127,7 @@ void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
 		packet.data = t_data;
 	}
 
-	pos = (uint32_t)(packet.data);
+	pos = (uint32_t)(packet.data); //Start at the beginning of the messages
 	while(packet.message_count--)
 	{
 		struct Pkt_FFXIV_msg *msg = malloc(sizeof(struct Pkt_FFXIV_msg));
