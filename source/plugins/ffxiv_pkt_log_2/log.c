@@ -60,7 +60,7 @@ inline void handle_chat_2(uint8_t *buf, size_t size)
         memcpy(chat, buf, size);
 	if(!strlen(chat->name) || !strlen(chat->message))
 		return;
-        LOG("[%s][%d %d]: %s", chat->name, chat->id1, chat->id2, chat->message);
+        LOG("[%s]: %s", chat->name, chat->message);
         free(chat);
 }
 
@@ -70,22 +70,11 @@ static DWORD WINAPI handle_buf(LPVOID PARAM) //Serialize packet parsing, TODO: s
 	LOG("Log start!");
 	while(1)
 	{
-		MSG msg;
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-		{
-			switch (msg.message)
-			{
-				case WM_QUIT:
-				return msg.wParam;
-			}
-		}
-
 		if(list_empty(&(buffer.buf)))
 			continue;
 		list_for_each_safe(t, s, &buffer.buf)
 		{
-			struct buffer_list *tmp = list_entry(t, struct buffer_list, buf);
-			
+			struct buffer_list *tmp = list_entry(t, struct buffer_list, buf);			
 			//Decompress stream	
 			if(tmp->compressed)
 			{
@@ -97,25 +86,24 @@ static DWORD WINAPI handle_buf(LPVOID PARAM) //Serialize packet parsing, TODO: s
 			uint8_t *pos = tmp->data;
 			for(uint32_t i = 0; i < tmp->msgc; i++)
 			{
-				struct Pkt_FFXIV_msg msg = *(struct Pkt_FFXIV_msg*)(pos);
+				struct Pkt_FFXIV_msg *msg = (struct Pkt_FFXIV_msg*)(pos);
 				pos += sizeof(struct Pkt_FFXIV_msg);
-				
-				if(msg.msg_size > tmp->size)
-					break;
-				
-				switch(msg.msg_type)
+				if(msg->msg_size > tmp->size)
+					break;	
+				switch(msg->msg_type)
 				{
-					case 0x00650014: LOGn("[%llu][0x%08X][%u]",tmp->time,msg.msg_type,i); handle_chat(pos, msg.msg_size); break;
-					case 0x00670014: LOGn("[%llu][0x%08X][%u]",tmp->time,msg.msg_type,i); handle_chat_2(pos, msg.msg_size); break;
+					case 0x00650014: LOGn("[%llu][0x%08X][%u]",tmp->time,msg->msg_type,i); handle_chat(pos, msg->msg_size); break;
+					case 0x00670014: LOGn("[%llu][0x%08X][%u]",tmp->time,msg->msg_type,i); handle_chat_2(pos, msg->msg_size); break;
 					default: break;
 				}
-				pos += msg.msg_size;
+				pos += msg->msg_size;
 			}
 			free(tmp->data);
 			list_del(t);
 			free(tmp);
 		}
-	}
+	}	
+	return 0;
 }
 
 void WINAPI log_ws(SOCKET *s, const char *buf, int *len, int *flags)
