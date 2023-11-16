@@ -36,7 +36,7 @@ LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comme
 		comment = (char*)"";
 	struct WS_handler *t = (struct WS_handler*)malloc(sizeof(struct WS_handler));
 	t->func = func;
-	t->comment = (char*)malloc(sizeof(char)*strlen(comment));
+	t->comment = (char*)malloc(sizeof(char)*(strlen(comment)+1));
 	strcpy(t->comment,comment);
 	if(type & WS_HANDLER_SEND)
 		list_add_tail(&(t->ws_handlers_send),&(ws_handlers.ws_handlers_send));
