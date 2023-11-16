@@ -10,6 +10,9 @@
 
 #define MAX_PACKET 4096
 
+struct WS_plugins ws_plugins;
+struct WS_handler ws_handlers;
+
 typedef int (WINAPI *tWS)(SOCKET, const char*, int, int); //For base functions
 
 static DWORD WINAPI initialize(LPVOID param);

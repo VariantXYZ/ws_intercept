@@ -4,19 +4,20 @@
 #include <windows.h>
 #include "list.h"
 
-#ifdef __cplusplus
-#define EXT extern "C"
-#else
-#define EXT
-#endif
-
 #ifdef EXPORT
 #define LIBVAR __declspec(dllexport)
-#define LIBAPI EXT LIBVAR
 #else
 #define LIBVAR __declspec(dllimport)
-#define LIBAPI EXT LIBVAR
 #endif
+
+#ifdef __cplusplus
+#define EXT extern "C"
+#define LIBAPI EXT LIBVAR
+#else
+#define EXT extern
+#define LIBAPI LIBVAR
+#endif
+
 
 typedef void (WINAPI *tWS_plugin)(SOCKET*, const char*, int*, int*); //For plugin hooks, passes a pointer to all the relevant data EXCEPT buf because that's already a pointer; Pointers can be rather scary.
 
@@ -45,7 +46,7 @@ struct WS_plugins
 LIBAPI DWORD register_handler(tWS_plugin func, WS_HANDLER_TYPE type, char *comment);
 LIBAPI void unregister_handler(DWORD plugin_id, WS_HANDLER_TYPE type);
 
-LIBVAR struct WS_plugins ws_plugins; //Why is the list of DLLs exposed? So someone can implement a plugin to reload them, of course!
-LIBVAR struct WS_handler ws_handlers;
+LIBVAR EXT struct WS_plugins ws_plugins;
+LIBVAR EXT struct WS_handler ws_handlers;
 
 #endif //WS_SEND_H
